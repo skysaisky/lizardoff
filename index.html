@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#060d06"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="LizardOFF"/>
+  <meta name="description" content="Ultrasonic lizard repellent app — keep lizards away using high-frequency sound waves."/>
+  <title>LizardOFF — Ultrasonic Repellent</title>
+  <link rel="manifest" href="manifest.json"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #060d06;
+      --green: #39ff14;
+      --green2: #22cc00;
+      --green-dim: #1a5c08;
+      --green-glow: rgba(57,255,20,0.3);
+      --card: #0b150b;
+      --border: #1a321a;
+      --text: #b8e8a8;
+      --muted: #4d7a40;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px
+      );
+      pointer-events: none; z-index: 100;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(57,255,20,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(57,255,20,0.03) 1px, transparent 1px);
+      background-size: 44px 44px;
+      pointer-events: none; z-index: 0;
+    }
+
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 1.5rem 1rem 4rem;
+      max-width: 500px; margin: 0 auto;
+    }
+
+    /* HEADER */
+    header { text-align: center; margin-bottom: 1.8rem; animation: fadeDown 0.6s ease both; }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 14vw, 5.5rem);
+      letter-spacing: 0.1em; color: var(--green);
+      text-shadow: 0 0 18px var(--green-glow), 0 0 50px rgba(57,255,20,0.12);
+      line-height: 1;
+    }
+
+    .logo span { color: #fff; opacity: 0.12; }
+    .tagline { font-size: 0.58rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted); margin-top: 0.2rem; }
+
+    /* CARDS */
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; width: 100%; padding: 1.6rem 1.5rem;
+      margin-bottom: 1rem; animation: fadeUp 0.6s ease both;
+    }
+    .card:nth-child(3) { animation-delay: 0.05s; }
+    .card:nth-child(4) { animation-delay: 0.1s; }
+    .card:nth-child(5) { animation-delay: 0.15s; }
+    .card:nth-child(6) { animation-delay: 0.2s; }
+
+    /* PULSE ZONE */
+    .pulse-zone {
+      position: relative; width: 200px; height: 200px; margin: 0 auto 0.5rem;
+    }
+
+    .ring {
+      position: absolute; top: 50%; left: 50%;
+      border-radius: 50%; border: 1.5px solid var(--green);
+      opacity: 0; transform: translate(-50%,-50%) scale(0.3);
+    }
+    .ring-1 { width: 200px; height: 200px; }
+    .ring-2 { width: 155px; height: 155px; }
+    .ring-3 { width: 112px; height: 112px; }
+
+    .active .ring-1 { animation: ripple 2s ease-out infinite 0s; }
+    .active .ring-2 { animation: ripple 2s ease-out infinite 0.45s; }
+    .active .ring-3 { animation: ripple 2s ease-out infinite 0.9s; }
+
+    @keyframes ripple {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+      15%  { opacity: 0.85; }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.1); }
+    }
+
+    .power-btn {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 100px; height: 100px; border-radius: 50%;
+      border: 2.5px solid var(--green-dim);
+      background: #0a120a; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      transition: all 0.25s;
+      box-shadow: 0 0 15px rgba(57,255,20,0.1); z-index: 2; outline: none;
+    }
+    .power-btn:active { transform: translate(-50%,-50%) scale(0.93); }
+    .power-btn.on {
+      border-color: var(--green);
+      box-shadow: 0 0 45px var(--green-glow), 0 0 80px rgba(57,255,20,0.08);
+      background: rgba(57,255,20,0.1);
+    }
+    .power-btn.on .power-icon { color: var(--green); filter: drop-shadow(0 0 6px var(--green)); }
+    .power-btn.on .power-label { color: var(--green); }
+    .power-icon { font-size: 2.2rem; color: var(--green-dim); transition: all 0.25s; user-select: none; }
+    .power-label { font-family: 'Bebas Neue', sans-serif; font-size: 0.72rem; letter-spacing: 0.2em; color: var(--green-dim); transition: color 0.25s; }
+
+    .status-line {
+      text-align: center; font-size: 0.6rem;
+      letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .status-line.on { color: var(--green); animation: blink 1.4s step-end infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* SECTION */
+    .section-title {
+      font-size: 0.58rem; letter-spacing: 0.3em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 1rem;
+    }
+
+    /* FREQUENCY */
+    .freq-display { display: flex; align-items: baseline; gap: 0.4rem; margin-bottom: 1rem; }
+    .freq-num { font-family: 'Bebas Neue', sans-serif; font-size: 3.5rem; line-height: 1; color: var(--green); text-shadow: 0 0 12px var(--green-glow); }
+    .freq-unit { font-size: 0.75rem; color: var(--muted); }
+
+    input[type=range] {
+      -webkit-appearance: none; width: 100%; height: 4px;
+      background: var(--border); border-radius: 2px; outline: none; cursor: pointer; margin-bottom: 0.6rem;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 10px var(--green-glow); cursor: pointer;
+    }
+    .range-labels { display: flex; justify-content: space-between; font-size: 0.55rem; color: var(--muted); }
+
+    .presets { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.6rem; margin-top: 1.2rem; }
+    .preset-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.65rem 0.3rem; cursor: pointer;
+      text-align: center; transition: all 0.2s; color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .preset-btn:active { transform: scale(0.95); }
+    .preset-btn.active { border-color: var(--green); background: rgba(57,255,20,0.08); box-shadow: 0 0 12px rgba(57,255,20,0.12); }
+    .preset-hz { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; color: var(--green); display: block; }
+    .preset-name { font-size: 0.52rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+
+    /* WAVEFORM */
+    .waveform-row { display: flex; gap: 0.6rem; margin-top: 1rem; }
+    .wave-btn {
+      flex: 1; background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.6rem; cursor: pointer;
+      text-align: center; font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); transition: all 0.2s;
+    }
+    .wave-btn:active { transform: scale(0.95); }
+    .wave-btn.active { border-color: var(--green); color: var(--green); background: rgba(57,255,20,0.07); }
+    .wave-icon { font-size: 1.2rem; display: block; margin-bottom: 4px; }
+
+    canvas {
+      width: 100%; height: 64px; border-radius: 8px;
+      background: #070e07; border: 1px solid var(--border);
+      display: block; margin-top: 1rem;
+    }
+
+    /* TIMER */
+    .timer-row { display: flex; align-items: center; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; }
+    .timer-display { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: var(--green); text-shadow: 0 0 10px var(--green-glow); letter-spacing: 0.08em; }
+    .timer-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .t-btn {
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.5rem 0.8rem; color: var(--text);
+      cursor: pointer; font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem; letter-spacing: 0.1em; transition: all 0.2s;
+    }
+    .t-btn:active { transform: scale(0.95); }
+    .t-btn.active-timer { border-color: var(--green); color: var(--green); background: rgba(57,255,20,0.07); }
+
+    /* TIPS */
+    .tips-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+    .tips-list li { display: flex; gap: 0.8rem; align-items: flex-start; font-size: 0.7rem; line-height: 1.55; color: var(--text); opacity: 0.75; }
+    .tip-icon { color: var(--green); font-size: 0.9rem; flex-shrink: 0; margin-top: 2px; }
+
+    /* INSTALL BANNER */
+    .install-banner {
+      background: linear-gradient(135deg, rgba(57,255,20,0.1), rgba(57,255,20,0.04));
+      border: 1px solid var(--green);
+      border-radius: 12px; padding: 1rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+      width: 100%; margin-bottom: 1rem;
+      cursor: pointer; transition: all 0.2s;
+      animation: fadeUp 0.6s ease both 0.25s;
+    }
+    .install-banner:hover { background: rgba(57,255,20,0.12); }
+    .install-banner.hidden { display: none; }
+    .install-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .install-text { flex: 1; }
+    .install-title { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.15em; color: var(--green); }
+    .install-sub { font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em; margin-top: 2px; }
+
+    footer { font-size: 0.52rem; letter-spacing: 0.2em; color: var(--green-dim); margin-top: 1.5rem; text-align: center; opacity: 0.5; }
+
+    @keyframes fadeDown { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform: translateY(20px);  } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo">LIZARD<span>//</span>OFF</div>
+    <div class="tagline">Ultrasonic Repellent · v2.0</div>
+  </header>
+
+  <!-- INSTALL BANNER -->
+  <div class="install-banner hidden" id="installBanner">
+    <div class="install-icon">📲</div>
+    <div class="install-text">
+      <div class="install-title">Install App</div>
+      <div class="install-sub">ADD TO HOME SCREEN FOR FULL EXPERIENCE</div>
+    </div>
+    <div style="color:var(--green);font-size:1.2rem;">›</div>
+  </div>
+
+  <!-- POWER -->
+  <div class="card" style="text-align:center;">
+    <div class="pulse-zone" id="pulseZone">
+      <div class="ring ring-1"></div>
+      <div class="ring ring-2"></div>
+      <div class="ring ring-3"></div>
+      <button class="power-btn" id="powerBtn" onclick="togglePower()">
+        <div class="power-icon">⏻</div>
+        <div class="power-label" id="powerLabel">START</div>
+      </button>
+    </div>
+    <div class="status-line" id="statusLine">● SYSTEM STANDBY</div>
+  </div>
+
+  <!-- FREQUENCY -->
+  <div class="card">
+    <div class="section-title">▸ Frequency Control</div>
+    <div class="freq-display">
+      <div class="freq-num" id="freqNum">20000</div>
+      <div class="freq-unit">Hz</div>
+    </div>
+    <input type="range" id="freqSlider" min="15000" max="25000" value="20000" oninput="updateFreq(this.value)"/>
+    <div class="range-labels"><span>15 kHz</span><span>20 kHz</span><span>25 kHz</span></div>
+
+    <div class="presets">
+      <button class="preset-btn" onclick="setPreset(18000, this)">
+        <span class="preset-hz">18K</span><span class="preset-name">Mild</span>
+      </button>
+      <button class="preset-btn active" onclick="setPreset(20000, this)">
+        <span class="preset-hz">20K</span><span class="preset-name">Standard</span>
+      </button>
+      <button class="preset-btn" onclick="setPreset(23000, this)">
+        <span class="preset-hz">23K</span><span class="preset-name">Intense</span>
+      </button>
+    </div>
+
+    <div class="waveform-row">
+      <button class="wave-btn active" onclick="setWave('sine',this)"><span class="wave-icon">∿</span>Sine</button>
+      <button class="wave-btn" onclick="setWave('square',this)"><span class="wave-icon">⊓</span>Square</button>
+      <button class="wave-btn" onclick="setWave('sawtooth',this)"><span class="wave-icon">⋀</span>Sawtooth</button>
+    </div>
+    <canvas id="waveCanvas"></canvas>
+  </div>
+
+  <!-- TIMER -->
+  <div class="card">
+    <div class="section-title">▸ Auto-Off Timer</div>
+    <div class="timer-row">
+      <div class="timer-display" id="timerDisplay">--:--</div>
+      <div class="timer-controls">
+        <button class="t-btn" onclick="setTimer(15, this)">15m</button>
+        <button class="t-btn" onclick="setTimer(30, this)">30m</button>
+        <button class="t-btn" onclick="setTimer(60, this)">1hr</button>
+        <button class="t-btn" onclick="setTimer(0, this)">OFF</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="card">
+    <div class="section-title">▸ Effectiveness Tips</div>
+    <ul class="tips-list">
+      <li><span class="tip-icon">◈</span>Place device near entry points — gaps, windows, and doors where lizards sneak in.</li>
+      <li><span class="tip-icon">◈</span>Ultrasonic waves don't go through walls. Use one device per room for full coverage.</li>
+      <li><span class="tip-icon">◈</span>Keep your phone volume at maximum for strongest ultrasonic output.</li>
+      <li><span class="tip-icon">◈</span>Run for 48–72 hours initially. Lizards leave gradually, not instantly.</li>
+      <li><span class="tip-icon">◈</span>Seal cracks and remove food sources to boost results further.</li>
+      <li><span class="tip-icon">⚠</span>Ultrasonic sound may affect pets like dogs, cats, and hamsters.</li>
+    </ul>
+  </div>
+
+  <footer>LIZARDOFF v2.0 · FOR EXTERNAL USE ONLY</footer>
+</div>
+
+<script>
+  // ── Audio ──
+  let audioCtx=null, oscillator=null, gainNode=null, analyser=null;
+  let isOn=false, currentFreq=20000, currentWave='sine';
+  let timerInterval=null, timerRemaining=0, animId=null;
+
+  function initAudio() {
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 1.0;
+    gainNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  }
+
+  function startOsc() {
+    if (!audioCtx) initAudio();
+    if (audioCtx.state==='suspended') audioCtx.resume();
+    oscillator = audioCtx.createOscillator();
+    oscillator.type = currentWave;
+    oscillator.frequency.setValueAtTime(currentFreq, audioCtx.currentTime);
+    oscillator.connect(gainNode);
+    oscillator.start();
+  }
+
+  function stopOsc() {
+    if (oscillator) { oscillator.stop(); oscillator.disconnect(); oscillator=null; }
+  }
+
+  function togglePower() {
+    isOn = !isOn;
+    const btn=document.getElementById('powerBtn');
+    const lbl=document.getElementById('powerLabel');
+    const st=document.getElementById('statusLine');
+    const zone=document.getElementById('pulseZone');
+    if (isOn) {
+      startOsc();
+      btn.classList.add('on'); zone.classList.add('active');
+      lbl.textContent='STOP'; st.textContent='● REPELLENT ACTIVE'; st.classList.add('on');
+      drawWave();
+    } else {
+      stopOsc();
+      btn.classList.remove('on'); zone.classList.remove('active');
+      lbl.textContent='START'; st.textContent='● SYSTEM STANDBY'; st.classList.remove('on');
+      clearTimerInt(); cancelAnimationFrame(animId); clearCanvas();
+    }
+  }
+
+  function updateFreq(val) {
+    currentFreq=parseInt(val);
+    document.getElementById('freqNum').textContent=currentFreq;
+    if (oscillator) oscillator.frequency.setValueAtTime(currentFreq, audioCtx.currentTime);
+  }
+
+  function setPreset(hz, el) {
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('freqSlider').value=hz;
+    updateFreq(hz);
+  }
+
+  function setWave(type, el) {
+    document.querySelectorAll('.wave-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+    currentWave=type;
+    if (oscillator) oscillator.type=type;
+  }
+
+  function setTimer(minutes, el) {
+    clearTimerInt();
+    document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active-timer'));
+    if (minutes===0) { document.getElementById('timerDisplay').textContent='--:--'; return; }
+    el.classList.add('active-timer');
+    timerRemaining=minutes*60;
+    updateTimerDisp();
+    timerInterval=setInterval(()=>{
+      timerRemaining--;
+      updateTimerDisp();
+      if (timerRemaining<=0) { clearTimerInt(); if(isOn) togglePower(); }
+    },1000);
+  }
+
+  function clearTimerInt() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval=null; }
+    document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('active-timer'));
+  }
+
+  function updateTimerDisp() {
+    const m=Math.floor(timerRemaining/60).toString().padStart(2,'0');
+    const s=(timerRemaining%60).toString().padStart(2,'0');
+    document.getElementById('timerDisplay').textContent=`${m}:${s}`;
+  }
+
+  // ── Canvas ──
+  const canvas=document.getElementById('waveCanvas');
+  const ctx2=canvas.getContext('2d');
+  function resizeCanvas() {
+    canvas.width=canvas.offsetWidth*devicePixelRatio;
+    canvas.height=canvas.offsetHeight*devicePixelRatio;
+    ctx2.scale(devicePixelRatio,devicePixelRatio);
+  }
+  resizeCanvas();
+  window.addEventListener('resize',resizeCanvas);
+
+  function drawWave() {
+    if (!isOn||!analyser) return;
+    animId=requestAnimationFrame(drawWave);
+    const W=canvas.offsetWidth, H=canvas.offsetHeight;
+    const buf=analyser.fftSize, data=new Uint8Array(buf);
+    analyser.getByteTimeDomainData(data);
+    ctx2.fillStyle='#070e07'; ctx2.fillRect(0,0,W,H);
+    ctx2.lineWidth=1.5; ctx2.strokeStyle='#39ff14';
+    ctx2.shadowColor='#39ff14'; ctx2.shadowBlur=6;
+    ctx2.beginPath();
+    const sl=W/buf; let x=0;
+    for(let i=0;i<buf;i++) {
+      const y=(data[i]/128.0*H)/2;
+      i===0?ctx2.moveTo(x,y):ctx2.lineTo(x,y);
+      x+=sl;
+    }
+    ctx2.stroke();
+  }
+
+  function clearCanvas() {
+    const W=canvas.offsetWidth, H=canvas.offsetHeight;
+    ctx2.fillStyle='#070e07'; ctx2.fillRect(0,0,W,H);
+    ctx2.strokeStyle='rgba(57,255,20,0.15)'; ctx2.lineWidth=1; ctx2.shadowBlur=0;
+    ctx2.beginPath(); ctx2.moveTo(0,H/2); ctx2.lineTo(W,H/2); ctx2.stroke();
+  }
+  clearCanvas();
+
+  // ── PWA Install ──
+  let deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault(); deferredPrompt=e;
+    document.getElementById('installBanner').classList.remove('hidden');
+  });
+  document.getElementById('installBanner').addEventListener('click',async()=>{
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const {outcome}=await deferredPrompt.userChoice;
+    if (outcome==='accepted') document.getElementById('installBanner').classList.add('hidden');
+    deferredPrompt=null;
+  });
+
+  // ── Service Worker ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+</script>
+</body>
+</html>
